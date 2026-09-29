@@ -1,2 +1,2 @@
 # Automations
-Make my life easiee
+Make my life easier
