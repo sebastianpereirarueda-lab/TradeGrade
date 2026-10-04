@@ -60,11 +60,9 @@ npm run typecheck
 The site is static, so it can be hosted anywhere. The repository ships with
 GitHub Pages deployment:
 
-1. Merge to `main`.
-2. In the repository, open **Settings → Pages** and set **Source** to
-   **GitHub Actions** (one time).
-3. Every push to `main` runs `.github/workflows/deploy.yml`, which tests,
-   builds and publishes `dist/`. The URL appears in the workflow summary
+1. Push to `main`.
+2. `.github/workflows/deploy.yml` tests, builds, enables GitHub Pages on the
+   first run and publishes `dist/`. The URL appears in the workflow summary
    (`https://<owner>.github.io/<repo>/`).
 
 Netlify, Vercel or Cloudflare Pages work the same way: build command
