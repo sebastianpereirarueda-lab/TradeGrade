@@ -179,7 +179,8 @@ export function ImportPage() {
             </div>
             <p className="mt-3 text-xs text-ink-3">
               Everything is stored in this browser only. Download a backup before clearing site data or switching
-              machines. {trades.length} trades stored.
+              machines. {trades.length} trades stored. Journal attachments (screenshots, videos, voice notes) live in
+              this browser's IndexedDB and are not part of the JSON backup; use the download button on each one.
             </p>
           </Card>
         </div>

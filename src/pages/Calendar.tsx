@@ -5,9 +5,11 @@ import { dayGrade, firstWeekdayOffset, groupByDay, monthDays } from "../lib/stat
 import { fmtMoney, fmtMoneySigned } from "../lib/format";
 import { monthLabel, todayKey } from "../lib/dates";
 import { Card, PnlText } from "../components/ui";
+import { useAttachmentDates } from "../lib/media";
 
 export function CalendarPage() {
   const { trades, journals, rules, settings } = useAppState();
+  const withMedia = useAttachmentDates();
   const today = new Date();
   const [ym, setYm] = useState({ y: today.getFullYear(), m: today.getMonth() });
   const days = useMemo(() => groupByDay(trades, settings), [trades, settings]);
@@ -80,6 +82,7 @@ export function CalendarPage() {
                       <span>{Number(k.slice(-2))}</span>
                       <span className="flex gap-1">
                         {hasNotes && <span title="Has journal">✎</span>}
+                        {withMedia.has(k) && <span title="Has attachments">📎</span>}
                         {g && (
                           <span className="rounded bg-surface-2 px-1 font-semibold text-ink-2" title="Day grade">
                             {g.letter}

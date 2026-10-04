@@ -11,6 +11,9 @@ Tailwind v4, Recharts, react-router (hash router). No backend; state is in
   `xlsx.ts` (SheetJS), `pdf.ts` (pdf.js text positions -> grid); `index.ts` dispatches by
   file type and lazy-loads the heavy parsers. Tested.
 - `src/lib/store.ts` – persisted store, `useAppState()`, `actions`.
+- `src/lib/media.ts` – journal attachments as Blobs in IndexedDB (`tradegrade-media`), hooks
+  `useAttachments(date)` / `useAttachmentDates()`. Tested with fake-indexeddb.
+- `src/components/Attachments.tsx` – drop / paste / pick media, voice-note recorder, lightbox.
 - `src/lib/sample.ts` – deterministic sample trades.
 - `src/components/charts.tsx` – all Recharts charts. `gauges.tsx` – SVG gauges.
 - `src/pages/*` – Dashboard, Calendar, Day, Rules, Import.

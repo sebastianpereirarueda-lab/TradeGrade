@@ -7,6 +7,7 @@ import { fmtMoney, fmtPct } from "../lib/format";
 import { Card, Empty, PnlText } from "../components/ui";
 import { IntradayChart } from "../components/charts";
 import { TradeTable } from "../components/TradeTable";
+import { Attachments } from "../components/Attachments";
 import type { DayJournal } from "../lib/types";
 
 const PSYCH: { key: keyof DayJournal["psych"]; label: string; hint: string }[] = [
@@ -154,6 +155,8 @@ export function DayPage() {
           </Card>
         </div>
       </div>
+
+      <Attachments date={date} />
 
       <Card title="Trades">
         <TradeTable trades={dayTrades} settings={settings} notes={tradeNotes} onNote={actions.setTradeNote} />

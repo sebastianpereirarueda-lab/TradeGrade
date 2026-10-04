@@ -5,7 +5,8 @@ traders: drop in the trade export from your prop firm, get the numbers that
 matter, journal every day, and grade yourself against your own rules.
 
 Everything runs in the browser. No account, no server: data stays on the
-user's machine (`localStorage`) with JSON backup and restore.
+user's machine (`localStorage` for trades and journals, IndexedDB for media)
+with JSON backup and restore.
 
 ## Import anything
 
@@ -32,8 +33,9 @@ Entry Price, Exit Price, P&L, Commissions, Fees, Direction`.
 - **Calendar** – month grid with net P&L and trade count per day and weekly
   totals. Click a day to open it.
 - **Day** – intraday P&L curve, day journal, rules checklist (followed /
-  broken), psychology ratings, computed A–F grade, trades with a note per
-  trade.
+  broken), psychology ratings, computed A–F grade, attachments (drop or
+  paste screenshots, add videos or audio, record a voice note in the
+  browser), trades with a note per trade.
 - **Rules** – edit the checklist; P&L by day grade and per rule; P&L by entry
   hour and by weekday; where losing trades land in points per contract
   (median / 75th / 90th percentile) as a stop-loss sanity check.
@@ -74,6 +76,7 @@ Netlify, Vercel or Cloudflare Pages work the same way: build command
 - [x] Main page with the key metrics
 - [x] Calendar with daily P&L that opens the day's journal
 - [x] Journal per day, notes per trade
+- [x] Screenshots, video and audio attachments, voice notes
 - [x] Rules checklist and psychological grades
 - [x] CSV, Excel and PDF import; session rollover like Topstep
 - [x] Deploy as a website
