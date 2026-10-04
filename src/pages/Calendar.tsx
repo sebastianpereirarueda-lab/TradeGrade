@@ -10,7 +10,7 @@ export function CalendarPage() {
   const { trades, journals, rules, settings } = useAppState();
   const today = new Date();
   const [ym, setYm] = useState({ y: today.getFullYear(), m: today.getMonth() });
-  const days = useMemo(() => groupByDay(trades, settings.pnlIsNet), [trades, settings.pnlIsNet]);
+  const days = useMemo(() => groupByDay(trades, settings), [trades, settings]);
   const byDate = useMemo(() => new Map(days.map((d) => [d.date, d])), [days]);
   const keys = monthDays(ym.y, ym.m);
   const offset = firstWeekdayOffset(keys[0]);

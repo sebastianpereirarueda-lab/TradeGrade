@@ -18,7 +18,11 @@ export default function App() {
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16">
       <header className="flex flex-wrap items-center justify-between gap-3 py-5">
-        <h1 className="text-base font-semibold tracking-wide text-ink">Trading Dashboard</h1>
+        <h1 className="flex items-baseline gap-2 text-base font-semibold tracking-wide text-ink">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-profit" aria-hidden />
+          TradeGrade
+          <span className="text-xs font-normal text-ink-3">Your trading, graded.</span>
+        </h1>
         <nav className="flex gap-1">
           {NAV.map((n) => (
             <NavLink

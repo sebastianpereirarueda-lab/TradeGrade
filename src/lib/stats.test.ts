@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { dayGrade, durationBuckets, groupByDay, netPnl, summarize } from "./stats";
-import { parseTradesCsv, mergeTrades } from "./csv";
-import { parseTimestamp } from "./dates";
-import type { Trade } from "./types";
+import { parseTradesCsv } from "./importers/csv";
+import { mergeTrades } from "./importers/rows";
+import { parseTimestamp, rootSymbol, tradingDay } from "./dates";
+import type { Settings, Trade } from "./types";
+
+const GROSS: Settings = { startingBalance: 0, pnlIsNet: false, sessionStartHour: 0 };
+const NET: Settings = { ...GROSS, pnlIsNet: true };
 
 const base = (over: Partial<Trade>): Trade => ({
   id: "1",
@@ -22,8 +26,8 @@ const base = (over: Partial<Trade>): Trade => ({
 describe("stats", () => {
   it("subtracts commissions and fees unless pnl is net", () => {
     const t = base({});
-    expect(netPnl(t, false)).toBe(98);
-    expect(netPnl(t, true)).toBe(100);
+    expect(netPnl(t, GROSS)).toBe(98);
+    expect(netPnl(t, NET)).toBe(100);
   });
 
   it("summarizes wins, losses, profit factor and day win rate", () => {
@@ -32,7 +36,7 @@ describe("stats", () => {
       base({ id: "b", pnl: -100, exitTime: new Date(2026, 8, 29, 19, 0).getTime() }),
       base({ id: "c", pnl: -52, entryTime: new Date(2026, 8, 30, 18, 0).getTime(), exitTime: new Date(2026, 8, 30, 18, 1).getTime() }),
     ];
-    const s = summarize(trades, false);
+    const s = summarize(trades, GROSS);
     expect(s.tradeCount).toBe(3);
     expect(s.wins).toBe(1);
     expect(s.losses).toBe(2);
@@ -48,16 +52,33 @@ describe("stats", () => {
   });
 
   it("groups by exit day", () => {
-    const days = groupByDay([base({}), base({ id: "2", pnl: -50 })], true);
+    const days = groupByDay([base({}), base({ id: "2", pnl: -50 })], NET);
     expect(days).toHaveLength(1);
     expect(days[0].pnl).toBe(50);
     expect(days[0].wins).toBe(1);
   });
 
   it("buckets durations", () => {
-    const b = durationBuckets([base({}), base({ id: "2", exitTime: base({}).entryTime + 10_000 })], true);
+    const b = durationBuckets([base({}), base({ id: "2", exitTime: base({}).entryTime + 10_000 })], NET);
     expect(b.find((x) => x.label === "5 min - 10 min")?.count).toBe(1);
     expect(b.find((x) => x.label === "Under 15 sec")?.count).toBe(1);
+  });
+
+  it("rolls evening trades into the next trading day", () => {
+    const evening = new Date(2026, 8, 30, 19, 59, 6).getTime();
+    expect(tradingDay(evening, 18)).toBe("2026-10-01");
+    expect(tradingDay(evening, 0)).toBe("2026-09-30");
+    const morning = new Date(2026, 9, 1, 9, 30).getTime();
+    expect(tradingDay(morning, 18)).toBe("2026-10-01");
+    const days = groupByDay([base({ exitTime: evening, entryTime: evening - 60_000 })], { ...NET, sessionStartHour: 18 });
+    expect(days[0].date).toBe("2026-10-01");
+  });
+
+  it("extracts root symbols", () => {
+    expect(rootSymbol("ESZ26")).toBe("ES");
+    expect(rootSymbol("MNQZ26")).toBe("MNQ");
+    expect(rootSymbol("/MNQ")).toBe("MNQ");
+    expect(rootSymbol("NQ")).toBe("NQ");
   });
 
   it("grades a day from psych ratings and rule adherence", () => {
@@ -82,6 +103,22 @@ describe("csv", () => {
     expect(parseTimestamp("9/29/2026 8:16:12 PM")).toBe(new Date(2026, 8, 29, 20, 16, 12).getTime());
     expect(parseTimestamp("2026-09-29T20:16:12")).toBe(new Date(2026, 8, 29, 20, 16, 12).getTime());
     expect(Number.isNaN(parseTimestamp("nope"))).toBe(true);
+  });
+
+  it("parses Topstep dashboard timestamps", () => {
+    expect(parseTimestamp("September 30 2026 @ 7:59:06 pm")).toBe(new Date(2026, 8, 30, 19, 59, 6).getTime());
+    expect(parseTimestamp("Sep 30, 2026 7:59 PM")).toBe(new Date(2026, 8, 30, 19, 59, 0).getTime());
+    expect(parseTimestamp("October 1 2026 @ 12:05:00 am")).toBe(new Date(2026, 9, 1, 0, 5, 0).getTime());
+  });
+
+  it("parses Topstep money formats like $-1.00 and 7,743.50", () => {
+    const csv = [
+      "ID,Contract,Size,Entry Time,Exit Time,Duration,Entry Price,Exit Price,P&L,Commissions,Fees,Direction",
+      "31558224,ESZ26,1,September 30 2026 @ 7:59:06 pm,September 30 2026 @ 8:24:31 pm,00:25:24,\"7,743.50\",\"7,735.00\",$425.00,$-1.00,$-2.78,Short",
+    ].join("\n");
+    const r = parseTradesCsv(csv);
+    expect(r.trades).toHaveLength(1);
+    expect(r.trades[0]).toMatchObject({ entryPrice: 7743.5, exitPrice: 7735, pnl: 425, commissions: 1, fees: 2.78, direction: "Short" });
   });
 
   it("parses a Topstep-style trade list", () => {

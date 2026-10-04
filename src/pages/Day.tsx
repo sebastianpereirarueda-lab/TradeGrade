@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { actions, emptyJournal, useAppState } from "../lib/store";
-import { dayGrade, intradayCurve, summarize } from "../lib/stats";
-import { dayKey, addDays, shortDateYear, weekdayName } from "../lib/dates";
+import { dayGrade, intradayCurve, summarize, tradeDay } from "../lib/stats";
+import { addDays, shortDateYear, weekdayName } from "../lib/dates";
 import { fmtMoney, fmtPct } from "../lib/format";
 import { Card, Empty, PnlText } from "../components/ui";
 import { IntradayChart } from "../components/charts";
@@ -17,11 +17,11 @@ const PSYCH: { key: keyof DayJournal["psych"]; label: string; hint: string }[] =
 
 export function DayPage() {
   const { date = "" } = useParams();
-  const { trades, journals, rules, settings } = useAppState();
+  const { trades, journals, rules, settings, tradeNotes } = useAppState();
   const valid = /^\d{4}-\d{2}-\d{2}$/.test(date);
-  const dayTrades = useMemo(() => trades.filter((t) => dayKey(t.exitTime) === date), [trades, date]);
-  const s = useMemo(() => summarize(dayTrades, settings.pnlIsNet), [dayTrades, settings.pnlIsNet]);
-  const curve = useMemo(() => intradayCurve(dayTrades, settings.pnlIsNet), [dayTrades, settings.pnlIsNet]);
+  const dayTrades = useMemo(() => trades.filter((t) => tradeDay(t, settings) === date), [trades, date, settings]);
+  const s = useMemo(() => summarize(dayTrades, settings), [dayTrades, settings]);
+  const curve = useMemo(() => intradayCurve(dayTrades, settings), [dayTrades, settings]);
 
   const saved = journals[date];
   const [draft, setDraft] = useState<DayJournal>(saved ?? emptyJournal(date));
@@ -156,7 +156,7 @@ export function DayPage() {
       </div>
 
       <Card title="Trades">
-        <TradeTable trades={dayTrades} pnlIsNet={settings.pnlIsNet} />
+        <TradeTable trades={dayTrades} settings={settings} notes={tradeNotes} onNote={actions.setTradeNote} />
       </Card>
     </div>
   );

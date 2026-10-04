@@ -1,31 +1,45 @@
-# Trading Dashboard
+# TradeGrade
 
-A simple, Topstep-style stats dashboard for my own futures trading: import the
-trade list, see the numbers that matter, journal each day, and grade myself
-against my rules.
+**Your trading, graded.** A simple, Topstep-style stats dashboard for futures
+traders: drop in the trade export from your prop firm, get the numbers that
+matter, journal every day, and grade yourself against your own rules.
 
-Everything runs in the browser. There is no backend and no account: data lives
-in `localStorage`, with JSON backup/restore from the Import page.
+Everything runs in the browser. No account, no server: data stays on the
+user's machine (`localStorage`) with JSON backup and restore.
+
+## Import anything
+
+Drop a **CSV, Excel (.xlsx) or PDF** export onto the dashboard. Columns are
+matched by name (case and punctuation ignored), so the Topstep trade list,
+Tradovate performance exports and hand-made sheets all work. Required: entry
+time, exit time, P&L. Recognised: `ID, Contract, Size, Entry Time, Exit Time,
+Entry Price, Exit Price, P&L, Commissions, Fees, Direction`.
+
+- Times may be ISO, US `MM/DD/YYYY HH:MM:SS`, or Topstep's
+  `September 30 2026 @ 7:59:06 pm`, read in the browser's local time zone.
+- Money may be `$425.00`, `$-1.00`, `(763.90)` or `7,743.50`.
+- PDFs are rebuilt from the text positions on the page: the header line fixes
+  the columns, rows follow, repeated headers on later pages are skipped.
+- Re-importing a file merges by trade ID, so you can export weekly and never
+  get duplicates.
 
 ## Pages
 
-- **Dashboard** – date range (custom / today / last week / last month / all),
-  total P&L, trade win %, avg win / avg loss, day win %, profit factor, best
-  day % of profit, account balance, cumulative and daily P&L, trade duration
-  and win rate by duration, weekday stats, durations, direction split,
-  best / worst trade.
-- **Calendar** – month grid with net P&L and trade count per day plus weekly
+- **Dashboard** – date range presets, total P&L, trade win %, avg win / avg
+  loss, day win %, profit factor, best day % of profit, account balance,
+  cumulative and daily P&L, duration and win rate by duration, weekday stats,
+  direction split, best / worst trade.
+- **Calendar** – month grid with net P&L and trade count per day and weekly
   totals. Click a day to open it.
-- **Day** – intraday P&L curve, journal, rules checklist (followed / broken),
-  psychology ratings (discipline, patience, emotional control) and the day's
-  trades. Grades A–F are computed from the checklist and ratings.
-- **Rules** – edit the checklist, see P&L by day grade and per rule (followed
-  vs broken), P&L by entry hour and by weekday, and where losing trades land
-  in points per contract (median / 75th / 90th percentile) as a stop-loss
-  sanity check.
-- **Import** – CSV import (Topstep / Tradovate style trade list), settings
-  (starting balance, whether P&L is already net of fees), sample data,
-  backup / restore, clear.
+- **Day** – intraday P&L curve, day journal, rules checklist (followed /
+  broken), psychology ratings, computed A–F grade, trades with a note per
+  trade.
+- **Rules** – edit the checklist; P&L by day grade and per rule; P&L by entry
+  hour and by weekday; where losing trades land in points per contract
+  (median / 75th / 90th percentile) as a stop-loss sanity check.
+- **Import** – file import with a preview, starting balance, trading-day
+  start hour (18:00 by default, so a 7 PM trade on the 30th counts for the
+  1st exactly like Topstep), sample data, backup / restore.
 
 ## Run it
 
@@ -37,25 +51,33 @@ npm run dev        # http://localhost:5173
 ```bash
 npm run build      # static site in dist/
 npm run preview
-npm test           # vitest: stats engine + CSV parser
+npm test           # vitest: stats engine, CSV/Excel/PDF importers
 npm run typecheck
 ```
 
-## CSV format
+## Deploy
 
-Columns are matched by name (case and punctuation ignored). Required: entry
-time, exit time, P&L. Recognised: `ID, Contract, Size, Entry Time, Exit Time,
-Entry Price, Exit Price, P&L, Commissions, Fees, Direction`. Times may be ISO or
-US `MM/DD/YYYY HH:MM:SS` (with or without AM/PM) and are read in the browser's
-local time zone. Re-importing a file merges by trade ID.
+The site is static, so it can be hosted anywhere. The repository ships with
+GitHub Pages deployment:
 
-## Roadmap (from the planning board)
+1. Merge to `main`.
+2. In the repository, open **Settings → Pages** and set **Source** to
+   **GitHub Actions** (one time).
+3. Every push to `main` runs `.github/workflows/deploy.yml`, which tests,
+   builds and publishes `dist/`. The URL appears in the workflow summary
+   (`https://<owner>.github.io/<repo>/`).
+
+Netlify, Vercel or Cloudflare Pages work the same way: build command
+`npm run build`, output directory `dist`.
+
+## Roadmap
 
 - [x] Main page with the key metrics
 - [x] Calendar with daily P&L that opens the day's journal
-- [x] Journal per day
+- [x] Journal per day, notes per trade
 - [x] Rules checklist and psychological grades
-- [ ] Grader: per-trade "followed the plan" tagging
-- [ ] Comments / annotations on individual trades
-- [ ] Rich text journal (the editor is plain text for now)
-- [ ] Optional sync (Topstep API or a small backend) instead of CSV import
+- [x] CSV, Excel and PDF import; session rollover like Topstep
+- [x] Deploy as a website
+- [ ] Optional accounts and cloud sync so one user can use several devices
+- [ ] Rich text journal (plain text for now)
+- [ ] Direct prop-firm API sync instead of file export

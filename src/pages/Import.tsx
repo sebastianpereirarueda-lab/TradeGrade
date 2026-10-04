@@ -1,24 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { actions, exportBackup, importBackup, useAppState } from "../lib/store";
-import { mergeTrades, parseTradesCsv, type ParseResult } from "../lib/csv";
+import { mergeTrades, type ParseResult } from "../lib/importers";
 import { sampleTrades } from "../lib/sample";
 import { Card } from "../components/ui";
 import { TradeTable } from "../components/TradeTable";
+import { ImportDropzone } from "../components/ImportDropzone";
 
 export function ImportPage() {
   const { trades, settings } = useAppState();
   const nav = useNavigate();
   const [result, setResult] = useState<ParseResult | null>(null);
-  const [fileName, setFileName] = useState("");
   const [msg, setMsg] = useState("");
-
-  const readFile = async (f: File | undefined) => {
-    if (!f) return;
-    setFileName(f.name);
-    setMsg("");
-    setResult(parseTradesCsv(await f.text()));
-  };
 
   const apply = (mode: "merge" | "replace") => {
     if (!result?.trades.length) return;
@@ -32,7 +25,7 @@ export function ImportPage() {
     const blob = new Blob([exportBackup()], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `trading-dashboard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `tradegrade-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -40,22 +33,24 @@ export function ImportPage() {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="Import trades (CSV)">
-          <p className="mb-3 text-xs text-ink-3">
-            Export your trade list from Topstep / Tradovate as CSV. Columns are matched by name: ID, Contract, Size,
-            Entry Time, Exit Time, Entry Price, Exit Price, P&amp;L, Commissions, Fees, Direction. Only entry time,
-            exit time and P&amp;L are required.
-          </p>
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            className="block text-sm"
-            onChange={(e) => readFile(e.target.files?.[0])}
+        <Card title="Import trades">
+          <ImportDropzone
+            compact
+            onParsed={(r) => {
+              setResult(r);
+              setMsg("");
+            }}
           />
+          <p className="mt-3 text-xs text-ink-3">
+            Works with the trade list from Topstep's dashboard and similar exports from other prop firms or
+            Tradovate. Columns are matched by name; only entry time, exit time and P&amp;L are required. Re-importing
+            the same file is safe: trades are matched by ID.
+          </p>
           {result && (
             <div className="mt-3 text-sm">
               <div className="text-ink-2">
-                {fileName}: {result.trades.length} trades parsed{result.skipped ? `, ${result.skipped} rows skipped` : ""}.
+                {result.source}: {result.trades.length} trades parsed
+                {result.skipped ? `, ${result.skipped} rows skipped` : ""}.
               </div>
               {result.errors.map((e) => (
                 <div key={e} className="mt-1 text-loss">
@@ -65,7 +60,10 @@ export function ImportPage() {
               {result.trades.length > 0 && (
                 <>
                   <div className="mt-1 text-xs text-ink-3">
-                    Columns: {Object.entries(result.columns).map(([k, v]) => `${k} ← "${v}"`).join(" · ")}
+                    Columns:{" "}
+                    {Object.entries(result.columns)
+                      .map(([k, v]) => `${k} ← "${v}"`)
+                      .join(" · ")}
                   </div>
                   <div className="mt-3 flex gap-2">
                     <button className="btn btn-accent" onClick={() => apply("merge")}>
@@ -76,7 +74,7 @@ export function ImportPage() {
                     </button>
                   </div>
                   <div className="mt-3 max-h-64 overflow-auto rounded-md border border-line">
-                    <TradeTable trades={result.trades.slice(0, 20)} pnlIsNet={settings.pnlIsNet} />
+                    <TradeTable trades={result.trades.slice(0, 20)} settings={settings} />
                   </div>
                 </>
               )}
@@ -95,6 +93,26 @@ export function ImportPage() {
                 value={settings.startingBalance}
                 onChange={(e) => actions.setSettings({ startingBalance: Number(e.target.value) || 0 })}
               />
+            </label>
+            <label className="mt-3 flex items-center justify-between gap-3 text-sm">
+              <span>
+                Trading day starts at
+                <span className="block text-xs text-ink-3">
+                  Futures sessions open the evening before. 18:00 matches Topstep: a trade at 7 PM on the 30th
+                  counts for the 1st. Set 0 for plain calendar days.
+                </span>
+              </span>
+              <select
+                className="input w-28"
+                value={settings.sessionStartHour}
+                onChange={(e) => actions.setSettings({ sessionStartHour: Number(e.target.value) })}
+              >
+                {[0, 15, 16, 17, 18, 19, 20].map((h) => (
+                  <option key={h} value={h}>
+                    {String(h).padStart(2, "0")}:00
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="mt-3 flex items-center justify-between gap-3 text-sm">
               <span>
@@ -144,7 +162,7 @@ export function ImportPage() {
               <button
                 className="btn btn-danger"
                 onClick={() => {
-                  if (confirm("Delete all trades? Journals and rules are kept.")) actions.clearTrades();
+                  if (confirm("Delete all trades? Journals, notes and rules are kept.")) actions.clearTrades();
                 }}
               >
                 Clear trades

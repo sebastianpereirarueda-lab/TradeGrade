@@ -40,6 +40,8 @@ export interface Settings {
   startingBalance: number;
   /** Treat commissions and fees as already included in `pnl`. */
   pnlIsNet: boolean;
+  /** Hour (0-23, local) at which a new trading day starts. 18 = CME evening open. */
+  sessionStartHour: number;
 }
 
 export interface AppState {
@@ -47,6 +49,8 @@ export interface AppState {
   journals: Record<string, DayJournal>;
   rules: Rule[];
   settings: Settings;
+  /** Free-form note per trade id. */
+  tradeNotes: Record<string, string>;
 }
 
 export interface DateRange {

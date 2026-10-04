@@ -11,30 +11,31 @@ import {
   ruleStats,
 } from "../lib/stats";
 import { fmtMoney, fmtNum, fmtPct } from "../lib/format";
+import { rootSymbol } from "../lib/dates";
 import { Card, Empty, PnlText } from "../components/ui";
 import { HourPnlChart } from "../components/charts";
 
 export function RulesPage() {
   const { rules, trades, journals, settings } = useAppState();
   const [text, setText] = useState("");
-  const net = settings.pnlIsNet;
 
-  const days = useMemo(() => groupByDay(trades, net), [trades, net]);
+  const days = useMemo(() => groupByDay(trades, settings), [trades, settings]);
   const rs = useMemo(() => ruleStats(days, journals, rules), [days, journals, rules]);
   const grades = useMemo(() => pnlByGrade(days, journals, rules), [days, journals, rules]);
-  const hours = useMemo(() => byHour(trades, net), [trades, net]);
-  const weekdays = useMemo(() => byWeekdayAll(trades, net), [trades, net]);
+  const hours = useMemo(() => byHour(trades, settings), [trades, settings]);
+  const weekdays = useMemo(() => byWeekdayAll(trades, settings), [trades, settings]);
   const stops = useMemo(() => {
     const byContract = new Map<string, { losses: number[]; wins: number[] }>();
     for (const t of trades) {
       if (!Number.isFinite(t.entryPrice) || !Number.isFinite(t.exitPrice)) continue;
       const pts = pointsMoved(t);
-      const g = byContract.get(t.contract) ?? { losses: [], wins: [] };
-      (netPnl(t, net) < 0 ? g.losses : g.wins).push(Math.abs(pts));
-      byContract.set(t.contract, g);
+      const root = rootSymbol(t.contract);
+      const g = byContract.get(root) ?? { losses: [], wins: [] };
+      (netPnl(t, settings) < 0 ? g.losses : g.wins).push(Math.abs(pts));
+      byContract.set(root, g);
     }
     return [...byContract.entries()].map(([c, g]) => ({ contract: c, loss: percentiles(g.losses), win: percentiles(g.wins) }));
-  }, [trades, net]);
+  }, [trades, settings]);
 
   const reviewed = Object.values(journals).filter((j) => Object.keys(j.rules).length || Object.keys(j.psych).length).length;
 

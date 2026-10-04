@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { AppState, DayJournal, Rule, Settings, Trade } from "./types";
 
-const KEY = "trading-dashboard:v1";
+const KEY = "tradegrade:v1";
 
 export const DEFAULT_RULES: Rule[] = [
   { id: "r-plan", text: "Only took trades from my written plan", enabled: true },
@@ -12,10 +12,10 @@ export const DEFAULT_RULES: Rule[] = [
   { id: "r-window", text: "Only traded during my session window", enabled: true },
 ];
 
-const DEFAULT_SETTINGS: Settings = { startingBalance: 50_000, pnlIsNet: false };
+const DEFAULT_SETTINGS: Settings = { startingBalance: 50_000, pnlIsNet: false, sessionStartHour: 18 };
 
 function emptyState(): AppState {
-  return { trades: [], journals: {}, rules: DEFAULT_RULES, settings: DEFAULT_SETTINGS };
+  return { trades: [], journals: {}, rules: DEFAULT_RULES, settings: DEFAULT_SETTINGS, tradeNotes: {} };
 }
 
 function load(): AppState {
@@ -28,6 +28,7 @@ function load(): AppState {
       journals: parsed.journals ?? {},
       rules: parsed.rules ?? DEFAULT_RULES,
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
+      tradeNotes: parsed.tradeNotes ?? {},
     };
   } catch {
     return emptyState();
@@ -71,6 +72,12 @@ export const actions = {
   saveJournal(j: DayJournal) {
     commit({ ...state, journals: { ...state.journals, [j.date]: { ...j, updatedAt: Date.now() } } });
   },
+  setTradeNote(id: string, text: string) {
+    const tradeNotes = { ...state.tradeNotes };
+    if (text.trim()) tradeNotes[id] = text;
+    else delete tradeNotes[id];
+    commit({ ...state, tradeNotes });
+  },
   setRules(rules: Rule[]) {
     commit({ ...state, rules });
   },
@@ -101,6 +108,7 @@ export function importBackup(text: string): AppState {
     journals: parsed.journals ?? {},
     rules: parsed.rules ?? DEFAULT_RULES,
     settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
+    tradeNotes: parsed.tradeNotes ?? {},
   };
   commit(next);
   return next;

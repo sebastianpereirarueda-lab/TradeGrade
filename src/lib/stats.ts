@@ -1,18 +1,23 @@
-import type { Trade, DateRange, DayJournal, Rule } from "./types";
-import { dayKey, weekdayName, parseDayKey, WEEKDAYS } from "./dates";
+import type { Trade, DateRange, DayJournal, Rule, Settings } from "./types";
+import { dayKey, tradingDay, weekdayName, parseDayKey, WEEKDAYS } from "./dates";
 
 /** Net P&L of a trade after commissions and fees (unless pnl is already net). */
-export function netPnl(t: Trade, pnlIsNet: boolean): number {
-  return pnlIsNet ? t.pnl : t.pnl - t.commissions - t.fees;
+export function netPnl(t: Trade, s: Settings): number {
+  return s.pnlIsNet ? t.pnl : t.pnl - t.commissions - t.fees;
+}
+
+/** Trading day of a trade (by exit time, with the session rollover applied). */
+export function tradeDay(t: Trade, s: Settings): string {
+  return tradingDay(t.exitTime, s.sessionStartHour);
 }
 
 export function durationMs(t: Trade): number {
   return t.exitTime - t.entryTime;
 }
 
-export function filterByRange(trades: Trade[], range: DateRange): Trade[] {
+export function filterByRange(trades: Trade[], range: DateRange, s: Settings): Trade[] {
   return trades.filter((t) => {
-    const k = dayKey(t.exitTime);
+    const k = tradeDay(t, s);
     if (range.from && k < range.from) return false;
     if (range.to && k > range.to) return false;
     return true;
@@ -31,17 +36,17 @@ export interface DaySummary {
   lots: number;
 }
 
-export function groupByDay(trades: Trade[], pnlIsNet: boolean): DaySummary[] {
+export function groupByDay(trades: Trade[], s: Settings): DaySummary[] {
   const map = new Map<string, DaySummary>();
   for (const t of trades) {
-    const k = dayKey(t.exitTime);
-    const p = netPnl(t, pnlIsNet);
-    const s = map.get(k) ?? { date: k, pnl: 0, trades: 0, wins: 0, lots: 0 };
-    s.pnl += p;
-    s.trades += 1;
-    s.wins += p > 0 ? 1 : 0;
-    s.lots += t.size;
-    map.set(k, s);
+    const k = tradeDay(t, s);
+    const p = netPnl(t, s);
+    const day = map.get(k) ?? { date: k, pnl: 0, trades: 0, wins: 0, lots: 0 };
+    day.pnl += p;
+    day.trades += 1;
+    day.wins += p > 0 ? 1 : 0;
+    day.lots += t.size;
+    map.set(k, day);
   }
   return [...map.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
 }
@@ -107,20 +112,20 @@ function avg(xs: number[]): number {
   return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN;
 }
 
-export function summarize(trades: Trade[], pnlIsNet: boolean): Summary {
-  const pnls = trades.map((t) => netPnl(t, pnlIsNet));
-  const winsArr = trades.filter((t) => netPnl(t, pnlIsNet) > 0);
-  const lossArr = trades.filter((t) => netPnl(t, pnlIsNet) < 0);
-  const grossProfit = winsArr.reduce((a, t) => a + netPnl(t, pnlIsNet), 0);
-  const grossLoss = -lossArr.reduce((a, t) => a + netPnl(t, pnlIsNet), 0);
-  const days = groupByDay(trades, pnlIsNet);
+export function summarize(trades: Trade[], s: Settings): Summary {
+  const pnls = trades.map((t) => netPnl(t, s));
+  const winsArr = trades.filter((t) => netPnl(t, s) > 0);
+  const lossArr = trades.filter((t) => netPnl(t, s) < 0);
+  const grossProfit = winsArr.reduce((a, t) => a + netPnl(t, s), 0);
+  const grossLoss = -lossArr.reduce((a, t) => a + netPnl(t, s), 0);
+  const days = groupByDay(trades, s);
   const winningDays = days.filter((d) => d.pnl > 0);
   const bestDay = winningDays.reduce((m, d) => Math.max(m, d.pnl), 0);
 
   let best: TradeExtreme | null = null;
   let worst: TradeExtreme | null = null;
   for (const t of trades) {
-    const p = netPnl(t, pnlIsNet);
+    const p = netPnl(t, s);
     if (!best || p > best.pnl) best = { trade: t, pnl: p };
     if (!worst || p < worst.pnl) worst = { trade: t, pnl: p };
   }
@@ -139,8 +144,8 @@ export function summarize(trades: Trade[], pnlIsNet: boolean): Summary {
     weekdays.reduce<WeekdayStat | null>((m, s) => (m === null || f(s, m) ? s : m), null);
 
   const longCount = trades.filter((t) => t.direction === "Long").length;
-  const avgWin = avg(winsArr.map((t) => netPnl(t, pnlIsNet)));
-  const avgLoss = avg(lossArr.map((t) => netPnl(t, pnlIsNet)));
+  const avgWin = avg(winsArr.map((t) => netPnl(t, s)));
+  const avgLoss = avg(lossArr.map((t) => netPnl(t, s)));
 
   return {
     totalPnl: pnls.reduce((a, b) => a + b, 0),
@@ -198,13 +203,13 @@ export interface BucketStat {
   pnl: number;
 }
 
-export function durationBuckets(trades: Trade[], pnlIsNet: boolean): BucketStat[] {
+export function durationBuckets(trades: Trade[], s: Settings): BucketStat[] {
   const out = DURATION_BUCKETS.map((b) => ({ label: b.label, count: 0, wins: 0, winRate: NaN, pnl: 0 }));
   for (const t of trades) {
     const d = durationMs(t);
     const i = DURATION_BUCKETS.findIndex((b) => d < b.maxMs);
     const b = out[i === -1 ? out.length - 1 : i];
-    const p = netPnl(t, pnlIsNet);
+    const p = netPnl(t, s);
     b.count += 1;
     b.wins += p > 0 ? 1 : 0;
     b.pnl += p;
@@ -224,7 +229,7 @@ export interface HourStat {
   pnl: number;
 }
 
-export function byHour(trades: Trade[], pnlIsNet: boolean): HourStat[] {
+export function byHour(trades: Trade[], s: Settings): HourStat[] {
   const out: HourStat[] = Array.from({ length: 24 }, (_, h) => ({
     hour: h,
     label: `${String(h).padStart(2, "0")}:00`,
@@ -235,7 +240,7 @@ export function byHour(trades: Trade[], pnlIsNet: boolean): HourStat[] {
   }));
   for (const t of trades) {
     const h = new Date(t.entryTime).getHours();
-    const p = netPnl(t, pnlIsNet);
+    const p = netPnl(t, s);
     out[h].count += 1;
     out[h].wins += p > 0 ? 1 : 0;
     out[h].pnl += p;
@@ -244,8 +249,8 @@ export function byHour(trades: Trade[], pnlIsNet: boolean): HourStat[] {
   return out.filter((b) => b.count > 0);
 }
 
-export function byWeekdayAll(trades: Trade[], pnlIsNet: boolean): WeekdayStat[] {
-  const days = groupByDay(trades, pnlIsNet);
+export function byWeekdayAll(trades: Trade[], s: Settings): WeekdayStat[] {
+  const days = groupByDay(trades, s);
   return WEEKDAYS.map((w) => {
     const mine = days.filter((d) => weekdayName(d.date) === w);
     return {
@@ -264,13 +269,13 @@ export interface IntradayPoint {
   pnl: number;
 }
 
-export function intradayCurve(trades: Trade[], pnlIsNet: boolean): IntradayPoint[] {
+export function intradayCurve(trades: Trade[], s: Settings): IntradayPoint[] {
   const sorted = sortByExit(trades);
   if (!sorted.length) return [];
   let run = 0;
   const pts: IntradayPoint[] = [{ time: sorted[0].entryTime, pnl: 0 }];
   for (const t of sorted) {
-    run += netPnl(t, pnlIsNet);
+    run += netPnl(t, s);
     pts.push({ time: t.exitTime, pnl: run });
   }
   return pts;

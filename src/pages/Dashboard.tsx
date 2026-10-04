@@ -2,16 +2,13 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppState } from "../lib/store";
 import type { DateRange } from "../lib/types";
-import {
-  cumulativeByDay,
-  durationBuckets,
-  filterByRange,
-  groupByDay,
-  summarize,
-} from "../lib/stats";
+import { cumulativeByDay, durationBuckets, filterByRange, groupByDay, netPnl, summarize, tradeDay } from "../lib/stats";
 import { fmtDateTime, fmtDuration, fmtMoney, fmtNum, fmtPct, fmtPrice } from "../lib/format";
 import { DateRangeBar, presetRange } from "../components/DateRangeBar";
 import { Card, Empty, PnlText, StatTile } from "../components/ui";
+import { ImportDropzone } from "../components/ImportDropzone";
+import { actions } from "../lib/store";
+import { mergeTrades } from "../lib/importers";
 import { Donut, HalfGauge, SplitBar } from "../components/gauges";
 import {
   BalanceChart,
@@ -37,29 +34,44 @@ function TradeLine({ pnl, trade }: { pnl: number; trade: import("../lib/types").
 export function Dashboard() {
   const { trades, settings } = useAppState();
   const [range, setRange] = useState<DateRange>(presetRange("month"));
-  const net = settings.pnlIsNet;
 
-  const filtered = useMemo(() => filterByRange(trades, range), [trades, range]);
-  const s = useMemo(() => summarize(filtered, net), [filtered, net]);
-  const days = useMemo(() => groupByDay(filtered, net), [filtered, net]);
+  const filtered = useMemo(() => filterByRange(trades, range, settings), [trades, range, settings]);
+  const s = useMemo(() => summarize(filtered, settings), [filtered, settings]);
+  const days = useMemo(() => groupByDay(filtered, settings), [filtered, settings]);
   const cum = useMemo(() => cumulativeByDay(days), [days]);
-  const buckets = useMemo(() => durationBuckets(filtered, net), [filtered, net]);
+  const buckets = useMemo(() => durationBuckets(filtered, settings), [filtered, settings]);
   const balance = useMemo(() => {
     // Balance before the range = starting balance + everything that closed earlier.
     const before = trades
-      .filter((t) => range.from && t.exitTime < new Date(range.from).getTime())
-      .reduce((a, t) => a + (net ? t.pnl : t.pnl - t.commissions - t.fees), 0);
+      .filter((t) => range.from && tradeDay(t, settings) < range.from)
+      .reduce((a, t) => a + netPnl(t, settings), 0);
     return cum.map((p) => ({ date: p.date, balance: settings.startingBalance + before + p.cumulative }));
-  }, [cum, trades, range.from, settings.startingBalance, net]);
+  }, [cum, trades, range.from, settings]);
 
   if (!trades.length) {
     return (
-      <Card>
-        <Empty>
-          No trades yet. <Link to="/import" className="underline">Import a CSV or load the sample data</Link> to see the
-          dashboard.
-        </Empty>
-      </Card>
+      <div className="mx-auto max-w-2xl space-y-4 py-10">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold">Your trading, graded.</h2>
+          <p className="mt-2 text-sm text-ink-2">
+            Drop the trade export from your prop firm and get the Topstep-style stats, a calendar with a journal for
+            every day, and a grade for how well you followed your own rules. Nothing leaves your browser.
+          </p>
+        </div>
+        <ImportDropzone
+          onParsed={(r) => {
+            if (r.trades.length) actions.setTrades(mergeTrades(trades, r.trades));
+            else alert(r.errors.join("\n") || "No trades found in that file.");
+          }}
+        />
+        <div className="text-center text-sm text-ink-3">
+          or{" "}
+          <Link to="/import" className="underline">
+            load sample data
+          </Link>{" "}
+          to look around first.
+        </div>
+      </div>
     );
   }
 
