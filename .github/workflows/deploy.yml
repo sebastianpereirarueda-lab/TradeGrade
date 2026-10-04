@@ -1,5 +1,6 @@
 # Builds the site and publishes it to GitHub Pages on every push to main.
-# The configure-pages step enables Pages on first run, so no manual setup is needed.
+# One-time setup: repository Settings -> Pages -> Source: "GitHub Actions".
+# (The workflow token is not allowed to create the Pages site itself.)
 name: Deploy
 
 on:
@@ -22,8 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/setup-node@v4
         with:
           node-version: 22
