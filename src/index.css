@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  --color-page: #0b0d11;
+  --color-surface: #15181e;
+  --color-surface-2: #1c2028;
+  --color-line: #262b35;
+  --color-ink: #f3f4f6;
+  --color-ink-2: #aab1bf;
+  --color-ink-3: #717a8a;
+  --color-profit: #34c474;
+  --color-loss: #df4f4a;
+  --color-neutral: #8b93a2;
+  --color-accent: #e3b341;
+  --font-sans: "Roboto", "Helvetica Neue", Arial, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 20% -10%, #152235 0%, var(--color-page) 55%);
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 18px 22px;
+}
+
+.card-title {
+  color: var(--color-ink-2);
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0 0 6px;
+}
+
+.tile-value {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.profit {
+  color: var(--color-profit);
+}
+.loss {
+  color: var(--color-loss);
+}
+
+.btn {
+  border: 1px solid var(--color-line);
+  background: var(--color-surface-2);
+  color: var(--color-ink);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--color-line);
+}
+.btn-active {
+  background: var(--color-ink);
+  color: var(--color-page);
+  border-color: var(--color-ink);
+}
+.btn-accent {
+  background: var(--color-accent);
+  color: #1a1400;
+  border-color: var(--color-accent);
+}
+.btn-accent:hover {
+  background: #f0c25a;
+}
+.btn-danger {
+  color: var(--color-loss);
+}
+
+.input {
+  background: var(--color-page);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--color-ink-3);
+}
+
+.recharts-tooltip-wrapper {
+  outline: none;
+}
