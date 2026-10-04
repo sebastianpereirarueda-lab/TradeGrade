@@ -3,6 +3,8 @@ import { utils, write } from "xlsx";
 import { parseTradesXlsx } from "./xlsx";
 import { headerColumns, itemsToGrid, tokenize, type TextItem } from "./pdf";
 import { parseGrid } from "./rows";
+import { parseTradesCsv } from "./csv";
+import { parseTimestamp } from "../dates";
 
 const HEADERS = ["ID", "Contract", "Size", "Entry Time", "Exit Time", "Duration", "Entry Price", "Exit Price", "P&L", "Commissions", "Fees", "Direction"];
 const ROW = ["31558224", "ESZ26", 1, "September 30 2026 @ 7:59:06 pm", "September 30 2026 @ 8:24:31 pm", "00:25:24", "7,743.50", "7,735.00", "$425.00", "$-1.00", "$-2.78", "Short"];
@@ -77,5 +79,33 @@ describe("pdf table rebuild", () => {
     expect(r.trades[0].entryTime).toBe(new Date(2026, 8, 30, 19, 59, 6).getTime());
     expect(r.trades[0].exitTime).toBe(new Date(2026, 8, 30, 20, 24, 31).getTime());
     expect(r.trades[1]).toMatchObject({ id: "31558356", contract: "MNQZ26", size: 3, entryPrice: 30817.75, pnl: 255 });
+  });
+});
+
+describe("Topstep export CSV", () => {
+  const csv = [
+    "Id,ContractName,EnteredAt,ExitedAt,EntryPrice,ExitPrice,Fees,PnL,Size,Type,TradeDay,TradeDuration,Commissions",
+    "3127605808,MNQZ6,09/23/2026 09:02:54 -04:00,09/23/2026 09:30:00 -04:00,30952.750000000,31010.750000000,2.16000,-348.000000000,3,Short,09/23/2026 00:00:00 -05:00,00:27:05.7686110,1.50000",
+    "3130410223,MNQZ6,09/23/2026 18:30:08 -04:00,09/23/2026 18:32:20 -04:00,30781.250000000,30795.000000000,3.60000,-137.500000000,5,Short,09/24/2026 00:00:00 -05:00,00:02:11.2465110,2.50000",
+    "3155822416,ESZ6,09/30/2026 19:59:06 -04:00,09/30/2026 20:24:31 -04:00,7743.500000000,7735.000000000,2.78000,425.000000000,1,Short,10/01/2026 00:00:00 -05:00,00:25:24.4241880,1.00000",
+  ].join("\n");
+
+  it("maps every column including the broker's trade day", () => {
+    const r = parseTradesCsv(csv, "trades_export.csv");
+    expect(r.errors).toEqual([]);
+    expect(r.trades).toHaveLength(3);
+    expect(r.trades[0]).toMatchObject({
+      id: "3127605808", contract: "MNQZ6", size: 3, entryPrice: 30952.75, exitPrice: 31010.75,
+      fees: 2.16, pnl: -348, commissions: 1.5, direction: "Short", tradeDay: "2026-09-23",
+    });
+    expect(r.trades[1].tradeDay).toBe("2026-09-24"); // 6:30 PM trade belongs to the next session
+    expect(r.trades[2]).toMatchObject({ contract: "ESZ6", pnl: 425, fees: 2.78, commissions: 1, tradeDay: "2026-10-01" });
+  });
+
+  it("honours explicit UTC offsets so the instant is exact in any browser zone", () => {
+    expect(parseTimestamp("09/23/2026 09:02:54 -04:00")).toBe(Date.UTC(2026, 8, 23, 13, 2, 54));
+    expect(parseTimestamp("09/23/2026 09:02:54 +0530")).toBe(Date.UTC(2026, 8, 23, 3, 32, 54));
+    expect(parseTimestamp("2026-09-23T09:02:54Z")).toBe(Date.UTC(2026, 8, 23, 9, 2, 54));
+    expect(parseTimestamp("September 30 2026 @ 7:59:06 pm -04:00")).toBe(Date.UTC(2026, 8, 30, 23, 59, 6));
   });
 });

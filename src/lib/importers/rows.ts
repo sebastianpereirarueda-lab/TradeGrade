@@ -1,5 +1,5 @@
 import type { Trade, Direction } from "../types";
-import { parseTimestamp } from "../dates";
+import { parseDateOnly, parseTimestamp } from "../dates";
 
 /**
  * Column aliases, lower-cased and stripped of non-letters. The first header
@@ -10,14 +10,15 @@ const ALIASES: Record<keyof Trade, string[]> = {
   id: ["id", "tradeid", "tradenumber", "number", "orderid"],
   contract: ["contract", "symbol", "instrument", "product", "contractname", "ticker"],
   size: ["size", "qty", "quantity", "contracts", "lots", "filledqty", "volume"],
-  entryTime: ["entrytime", "boughttimestamp", "opentime", "entrydate", "entry", "entrytimestamp", "opened", "open"],
-  exitTime: ["exittime", "soldtimestamp", "closetime", "exitdate", "exit", "exittimestamp", "closed", "close"],
+  entryTime: ["entrytime", "enteredat", "entered", "boughttimestamp", "opentime", "entrydate", "entry", "entrytimestamp", "opened", "open"],
+  exitTime: ["exittime", "exitedat", "exited", "soldtimestamp", "closetime", "exitdate", "exit", "exittimestamp", "closed", "close"],
   entryPrice: ["entryprice", "buyprice", "openprice", "avgentry", "pricein", "entryavg"],
   exitPrice: ["exitprice", "sellprice", "closeprice", "avgexit", "priceout", "exitavg"],
   pnl: ["pl", "pnl", "profit", "profitloss", "netpl", "netpnl", "realizedpl", "grosspl", "realized"],
   commissions: ["commissions", "commission", "comm"],
   fees: ["fees", "fee", "exchangefees"],
   direction: ["direction", "side", "type", "longshort", "buysell"],
+  tradeDay: ["tradeday", "tradingday", "sessiondate", "session"],
 };
 
 /** Trade field for a normalised header, if it is a known alias. */
@@ -117,6 +118,11 @@ export function mapRows(headers: unknown[], rows: unknown[][]): ParseResult {
     const exitPrice = num(get("exitPrice"));
     const size = num(get("size"));
     const id = String(get("id") ?? "").trim() || `${entryTime}-${exitTime}-${i}`;
+    const tradeDayRaw = get("tradeDay");
+    const tradeDay =
+      tradeDayRaw instanceof Date
+        ? parseDateOnly(`${tradeDayRaw.getFullYear()}-${String(tradeDayRaw.getMonth() + 1).padStart(2, "0")}-${String(tradeDayRaw.getDate()).padStart(2, "0")}`)
+        : parseDateOnly(String(tradeDayRaw ?? ""));
     trades.push({
       id,
       contract: String(get("contract") ?? "").trim() || "?",
@@ -129,6 +135,7 @@ export function mapRows(headers: unknown[], rows: unknown[][]): ParseResult {
       commissions: Math.abs(num(get("commissions"))) || 0,
       fees: Math.abs(num(get("fees"))) || 0,
       direction: direction(get("direction"), entryPrice, exitPrice, pnl),
+      ...(tradeDay ? { tradeDay } : {}),
     });
   });
   return { trades, columns, skipped, errors };

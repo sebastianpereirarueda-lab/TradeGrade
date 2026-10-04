@@ -6,9 +6,12 @@ export function netPnl(t: Trade, s: Settings): number {
   return s.pnlIsNet ? t.pnl : t.pnl - t.commissions - t.fees;
 }
 
-/** Trading day of a trade (by exit time, with the session rollover applied). */
+/**
+ * Trading day of a trade: the broker's own assignment when the export had one,
+ * otherwise the exit time with the session rollover applied.
+ */
 export function tradeDay(t: Trade, s: Settings): string {
-  return tradingDay(t.exitTime, s.sessionStartHour);
+  return t.tradeDay ?? tradingDay(t.exitTime, s.sessionStartHour);
 }
 
 export function durationMs(t: Trade): number {

@@ -22,8 +22,10 @@ Tailwind v4, Recharts, react-router (hash router). No backend; state is in
   compose them. P&L is net (minus commissions and fees) unless `settings.pnlIsNet`.
 - Deployment: GitHub Pages via `.github/workflows/deploy.yml` on push to `main`; `vite.config.ts`
   uses `base: "./"` and the app uses a hash router so it works from any sub-path.
-- Days are keyed `YYYY-MM-DD` in local time by exit time, after the session rollover
-  (`settings.sessionStartHour`, default 18): use `tradeDay()` / `tradingDay()`, never `dayKey(t.exitTime)`.
+- Days are keyed `YYYY-MM-DD`. `tradeDay()` uses the export's own `tradeDay` when present
+  (Topstep's `TradeDay` column), else exit time in local time after the session rollover
+  (`settings.sessionStartHour`, default 18). Never use `dayKey(t.exitTime)` for grouping.
+- Timestamps with an explicit UTC offset are parsed as exact instants; display is browser-local.
 - Stats functions take the whole `Settings` object, not individual flags.
 - Charts: no animation, 2px lines, max 24px bars with rounded data-ends, hairline grid.
 - Text never wears the series color except the profit/loss sign tint via `PnlText`.

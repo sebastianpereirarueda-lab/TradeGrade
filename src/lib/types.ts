@@ -13,6 +13,8 @@ export interface Trade {
   commissions: number; // positive magnitude
   fees: number; // positive magnitude
   direction: Direction;
+  /** Trading day (YYYY-MM-DD) as assigned by the broker's export, when it provides one. */
+  tradeDay?: string;
 }
 
 export interface Rule {

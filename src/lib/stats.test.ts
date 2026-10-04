@@ -74,6 +74,11 @@ describe("stats", () => {
     expect(days[0].date).toBe("2026-10-01");
   });
 
+  it("prefers the export's own trade day over the rollover", () => {
+    const t = base({ exitTime: new Date(2026, 8, 23, 9, 30).getTime(), tradeDay: "2026-09-24" });
+    expect(groupByDay([t], { ...NET, sessionStartHour: 18 })[0].date).toBe("2026-09-24");
+  });
+
   it("extracts root symbols", () => {
     expect(rootSymbol("ESZ26")).toBe("ES");
     expect(rootSymbol("MNQZ26")).toBe("MNQ");

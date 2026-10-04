@@ -147,6 +147,7 @@ const ACCEPTS: Record<ColKey, TokType[]> = {
   commissions: ["money", "number"],
   fees: ["money", "number"],
   direction: ["word"],
+  tradeDay: ["datetime"],
   duration: ["duration"],
   unknown: ["datetime", "duration", "money", "number", "word"],
 };

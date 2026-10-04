@@ -75,8 +75,45 @@ function withClock(y: number, mo: number, d: number, hRaw = "0", mi = "0", sec =
   return new Date(y, mo, d, h, Number(mi), Number(sec)).getTime();
 }
 
+/**
+ * Split a trailing UTC offset ("-04:00", "+0530", "Z", "UTC") off a timestamp.
+ * Returns the remaining text and the offset in minutes, or null when absent.
+ */
+function splitOffset(s: string): { text: string; offsetMin: number | null } {
+  const m = s.match(/\s*(Z|UTC|GMT|([+-])(\d{2}):?(\d{2}))$/i);
+  if (!m) return { text: s, offsetMin: null };
+  const text = s.slice(0, m.index).trim();
+  if (!m[2]) return { text, offsetMin: 0 };
+  const sign = m[2] === "-" ? -1 : 1;
+  return { text, offsetMin: sign * (Number(m[3]) * 60 + Number(m[4])) };
+}
+
+/** Shift a local-time parse to the instant it denotes in the given offset. */
+function applyOffset(localMs: number, offsetMin: number | null): number {
+  if (offsetMin === null || Number.isNaN(localMs)) return localMs;
+  const d = new Date(localMs);
+  const utc = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds());
+  return utc - offsetMin * 60_000;
+}
+
+/** Date part only ("09/23/2026 00:00:00 -05:00" -> "2026-09-23"), ignoring any time or zone. */
+export function parseDateOnly(raw: string): string | null {
+  const s = raw.trim();
+  const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (us) {
+    let y = Number(us[3]);
+    if (y < 100) y += 2000;
+    return `${y}-${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}`;
+  }
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const t = parseTimestamp(s);
+  return Number.isNaN(t) ? null : dayKey(t);
+}
+
 export function parseTimestamp(raw: string): number {
-  const s = raw.trim().replace(/\s+/g, " ");
+  const { text, offsetMin } = splitOffset(raw.trim().replace(/\s+/g, " "));
+  const s = text;
   if (!s) return NaN;
   // "September 30 2026 @ 7:59:06 pm" / "Sep 30, 2026 7:59 PM" (Topstep dashboard)
   const words = s.match(
@@ -84,7 +121,8 @@ export function parseTimestamp(raw: string): number {
   );
   if (words) {
     const mo = MONTHS[words[1].toLowerCase().slice(0, 4)] ?? MONTHS[words[1].toLowerCase().slice(0, 3)];
-    if (mo !== undefined) return withClock(Number(words[3]), mo, Number(words[2]), words[4], words[5], words[6], words[7]);
+    if (mo !== undefined)
+      return applyOffset(withClock(Number(words[3]), mo, Number(words[2]), words[4], words[5], words[6], words[7]), offsetMin);
   }
   const us = s.match(
     /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:[ ,T]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp][Mm])?)?$/,
@@ -93,9 +131,9 @@ export function parseTimestamp(raw: string): number {
     const [, mo, d, yRaw, hRaw, mi, sec, ampm] = us;
     let y = Number(yRaw);
     if (y < 100) y += 2000;
-    return withClock(y, Number(mo) - 1, Number(d), hRaw, mi, sec, ampm);
+    return applyOffset(withClock(y, Number(mo) - 1, Number(d), hRaw, mi, sec, ampm), offsetMin);
   }
-  const t = Date.parse(s);
+  const t = Date.parse(offsetMin === null ? s : raw.trim());
   return Number.isNaN(t) ? NaN : t;
 }
 

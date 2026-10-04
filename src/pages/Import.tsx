@@ -42,9 +42,9 @@ export function ImportPage() {
             }}
           />
           <p className="mt-3 text-xs text-ink-3">
-            Works with the trade list from Topstep's dashboard and similar exports from other prop firms or
-            Tradovate. Columns are matched by name; only entry time, exit time and P&amp;L are required. Re-importing
-            the same file is safe: trades are matched by ID.
+            Works with Topstep's "Export trades" CSV, the printed trade list, and similar exports from other prop
+            firms or Tradovate. Columns are matched by name; only entry time, exit time and P&amp;L are required.
+            Re-importing the same file is safe: trades are matched by ID.
           </p>
           {result && (
             <div className="mt-3 text-sm">
@@ -99,7 +99,8 @@ export function ImportPage() {
                 Trading day starts at
                 <span className="block text-xs text-ink-3">
                   Futures sessions open the evening before. 18:00 matches Topstep: a trade at 7 PM on the 30th
-                  counts for the 1st. Set 0 for plain calendar days.
+                  counts for the 1st. Set 0 for plain calendar days. Ignored when the export has its own
+                  trade-day column, as Topstep's does.
                 </span>
               </span>
               <select
