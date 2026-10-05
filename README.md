@@ -91,10 +91,12 @@ row-level security. One-time setup, about ten minutes:
    enable it, and paste a Google OAuth client ID and secret (created in the
    Google Cloud console with the redirect URI Supabase shows there).
 5. **Settings → API**: copy the **Project URL** and the **anon public** key.
-6. In the GitHub repository: **Settings → Secrets and variables → Actions →
-   Variables**, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-7. Re-run the **Deploy** workflow (Actions tab). The header now shows
-   **Sign in**.
+6. Put the **Project URL** and the key into `.github/workflows/deploy.yml`
+   (the two defaults in the build step), or add them as repository
+   **Variables** named `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`,
+   which take precedence.
+7. Push or re-run the **Deploy** workflow (Actions tab). The header now
+   shows **Sign in**.
 
 The anon key is designed to be public; access is enforced by the policies
 in the schema. Locally, copy `.env.example` to `.env` with the same values.
