@@ -53,6 +53,8 @@ export interface AppState {
   settings: Settings;
   /** Free-form note per trade id. */
   tradeNotes: Record<string, string>;
+  /** Last local change, epoch ms. Used to reconcile with the cloud copy. */
+  updatedAt?: number;
 }
 
 export interface DateRange {

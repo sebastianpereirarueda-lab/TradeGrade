@@ -4,9 +4,10 @@
 traders: drop in the trade export from your prop firm, get the numbers that
 matter, journal every day, and grade yourself against your own rules.
 
-Everything runs in the browser. No account, no server: data stays on the
-user's machine (`localStorage` for trades and journals, IndexedDB for media)
-with JSON backup and restore.
+Runs entirely in the browser. Without an account, data stays on the user's
+machine (`localStorage` for trades and journals, IndexedDB for media) with
+JSON backup and restore. With accounts enabled (see below), users sign in
+and everything syncs to their account and across devices.
 
 ## Import anything
 
@@ -71,6 +72,39 @@ GitHub Pages deployment:
 Netlify, Vercel or Cloudflare Pages work the same way: build command
 `npm run build`, output directory `dist`.
 
+## Accounts (sign-in and sync)
+
+Sign-in uses [Supabase](https://supabase.com) (free tier is plenty): email +
+password, magic link, Google. Each user's data is one JSON row and their
+attachments live in a private storage bucket, both locked to the user by
+row-level security. One-time setup, about ten minutes:
+
+1. Create a project at https://supabase.com/dashboard (any region, any
+   password; keep the database password somewhere safe).
+2. Open **SQL Editor**, paste the contents of `supabase/schema.sql`, click
+   **Run**.
+3. **Authentication → URL Configuration**: set **Site URL** to the deployed
+   app URL (for GitHub Pages `https://<owner>.github.io/TradeGrade/`) and add
+   the same URL under **Redirect URLs**. Add `http://localhost:5173/` too if
+   you develop locally.
+4. Optional, for Google sign-in: **Authentication → Providers → Google**,
+   enable it, and paste a Google OAuth client ID and secret (created in the
+   Google Cloud console with the redirect URI Supabase shows there).
+5. **Settings → API**: copy the **Project URL** and the **anon public** key.
+6. In the GitHub repository: **Settings → Secrets and variables → Actions →
+   Variables**, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+7. Re-run the **Deploy** workflow (Actions tab). The header now shows
+   **Sign in**.
+
+The anon key is designed to be public; access is enforced by the policies
+in the schema. Locally, copy `.env.example` to `.env` with the same values.
+
+How sync behaves: on first sign-in on a device that already has data, the
+app asks whether to use the account's data or upload the device's. After
+that every change is saved to the account within about a second, and a dot
+in the header shows the status. Attachments upload on add and download on
+demand on the day they belong to.
+
 ## Roadmap
 
 - [x] Main page with the key metrics
@@ -80,6 +114,6 @@ Netlify, Vercel or Cloudflare Pages work the same way: build command
 - [x] Rules checklist and psychological grades
 - [x] CSV, Excel and PDF import; session rollover like Topstep
 - [x] Deploy as a website
-- [ ] Optional accounts and cloud sync so one user can use several devices
+- [x] Accounts and cloud sync (Supabase)
 - [ ] Rich text journal (plain text for now)
 - [ ] Direct prop-firm API sync instead of file export

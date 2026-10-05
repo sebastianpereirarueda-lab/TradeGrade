@@ -3,7 +3,8 @@ import { dayGrade, durationBuckets, groupByDay, netPnl, summarize } from "./stat
 import { parseTradesCsv } from "./importers/csv";
 import { mergeTrades } from "./importers/rows";
 import { parseTimestamp, rootSymbol, tradingDay } from "./dates";
-import type { Settings, Trade } from "./types";
+import type { AppState, Settings, Trade } from "./types";
+import { decideInitialSync, hasContent } from "./sync";
 
 const GROSS: Settings = { startingBalance: 0, pnlIsNet: false, sessionStartHour: 0 };
 const NET: Settings = { ...GROSS, pnlIsNet: true };
@@ -156,5 +157,29 @@ describe("csv", () => {
     const merged = mergeTrades([base({ id: "1", pnl: 1 })], [base({ id: "1", pnl: 2 }), base({ id: "2" })]);
     expect(merged).toHaveLength(2);
     expect(merged.find((t) => t.id === "1")?.pnl).toBe(2);
+  });
+});
+
+describe("sync reconcile", () => {
+  const empty: AppState = { trades: [], journals: {}, rules: [], settings: GROSS, tradeNotes: {}, updatedAt: 0 };
+  const withTrades = (updatedAt: number): AppState => ({ ...empty, trades: [base({})], updatedAt });
+
+  it("pushes when the account has nothing yet", () => {
+    expect(decideInitialSync(withTrades(5), null, false)).toBe("push");
+    expect(decideInitialSync(empty, null, false)).toBe("push");
+  });
+  it("pulls when this device is empty", () => {
+    expect(decideInitialSync(empty, { data: withTrades(1), updatedAt: 1 }, false)).toBe("pull");
+  });
+  it("asks when both have content and the device never synced with this account", () => {
+    expect(decideInitialSync(withTrades(9), { data: withTrades(1), updatedAt: 1 }, false)).toBe("ask");
+  });
+  it("uses the newer side when the device synced with this account before", () => {
+    expect(decideInitialSync(withTrades(9), { data: withTrades(1), updatedAt: 1 }, true)).toBe("push");
+    expect(decideInitialSync(withTrades(1), { data: withTrades(9), updatedAt: 9 }, true)).toBe("pull");
+  });
+  it("counts journals and notes as content", () => {
+    expect(hasContent({ ...empty, journals: { "2026-10-01": { date: "2026-10-01", notes: "x", rules: {}, psych: {}, updatedAt: 1 } } })).toBe(true);
+    expect(hasContent(empty)).toBe(false);
   });
 });

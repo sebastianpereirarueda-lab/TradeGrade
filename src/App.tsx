@@ -4,6 +4,8 @@ import { CalendarPage } from "./pages/Calendar";
 import { DayPage } from "./pages/Day";
 import { RulesPage } from "./pages/Rules";
 import { ImportPage } from "./pages/Import";
+import { SignInPage } from "./pages/SignIn";
+import { AccountMenu } from "./components/AccountMenu";
 import { todayKey } from "./lib/dates";
 
 const NAV = [
@@ -23,7 +25,7 @@ export default function App() {
           TradeGrade
           <span className="text-xs font-normal text-ink-3">Your trading, graded.</span>
         </h1>
-        <nav className="flex gap-1">
+        <nav className="flex items-center gap-1">
           {NAV.map((n) => (
             <NavLink
               key={n.to}
@@ -36,6 +38,7 @@ export default function App() {
               {n.label}
             </NavLink>
           ))}
+          <AccountMenu />
         </nav>
       </header>
       <main>
@@ -45,6 +48,7 @@ export default function App() {
           <Route path="/day/:date" element={<DayPage />} />
           <Route path="/rules" element={<RulesPage />} />
           <Route path="/import" element={<ImportPage />} />
+          <Route path="/signin" element={<SignInPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

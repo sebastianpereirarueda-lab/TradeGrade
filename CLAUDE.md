@@ -1,8 +1,9 @@
 # TradeGrade
 
 Topstep-style trading stats dashboard with a journal and rule grading. Vite + React 18 + TypeScript,
-Tailwind v4, Recharts, react-router (hash router). No backend; state is in
-`localStorage` via `src/lib/store.ts`.
+Tailwind v4, Recharts, react-router (hash router). Local-first: state is in
+`localStorage` via `src/lib/store.ts`; optional Supabase sign-in and sync when
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are set at build time.
 
 ## Layout
 - `src/lib/types.ts` – `Trade`, `DayJournal`, `Rule`, `Settings`, `AppState`.
@@ -14,6 +15,10 @@ Tailwind v4, Recharts, react-router (hash router). No backend; state is in
 - `src/lib/media.ts` – journal attachments as Blobs in IndexedDB (`tradegrade-media`), hooks
   `useAttachments(date)` / `useAttachmentDates()`. Tested with fake-indexeddb.
 - `src/components/Attachments.tsx` – drop / paste / pick media, voice-note recorder, lightbox.
+- `src/lib/supabase.ts` (client or null), `auth.ts` (session hook + sign-in calls), `sync.ts`
+  (one JSON row per user in `user_data`, debounced upsert, first-sign-in reconcile). Media mirrors
+  to the `media` bucket + `attachments` table from `media.ts`. Schema: `supabase/schema.sql`.
+- `src/pages/SignIn.tsx`, `src/components/AccountMenu.tsx` – only render when configured.
 - `src/lib/sample.ts` – deterministic sample trades.
 - `src/components/charts.tsx` – all Recharts charts. `gauges.tsx` – SVG gauges.
 - `src/pages/*` – Dashboard, Calendar, Day, Rules, Import.

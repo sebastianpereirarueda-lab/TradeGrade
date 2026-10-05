@@ -15,7 +15,7 @@ export const DEFAULT_RULES: Rule[] = [
 const DEFAULT_SETTINGS: Settings = { startingBalance: 50_000, pnlIsNet: false, sessionStartHour: 18 };
 
 function emptyState(): AppState {
-  return { trades: [], journals: {}, rules: DEFAULT_RULES, settings: DEFAULT_SETTINGS, tradeNotes: {} };
+  return { trades: [], journals: {}, rules: DEFAULT_RULES, settings: DEFAULT_SETTINGS, tradeNotes: {}, updatedAt: 0 };
 }
 
 function load(): AppState {
@@ -29,6 +29,7 @@ function load(): AppState {
       rules: parsed.rules ?? DEFAULT_RULES,
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
       tradeNotes: parsed.tradeNotes ?? {},
+      updatedAt: parsed.updatedAt ?? 0,
     };
   } catch {
     return emptyState();
@@ -39,7 +40,7 @@ let state: AppState = load();
 const listeners = new Set<() => void>();
 
 function commit(next: AppState) {
-  state = next;
+  state = { ...next, updatedAt: Date.now() };
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {
@@ -50,6 +51,12 @@ function commit(next: AppState) {
 
 export function getState(): AppState {
   return state;
+}
+
+/** Subscribe to every committed change (used by cloud sync). */
+export function subscribeStore(l: () => void): () => void {
+  listeners.add(l);
+  return () => listeners.delete(l);
 }
 
 export function useAppState(): AppState {
@@ -109,6 +116,7 @@ export function importBackup(text: string): AppState {
     rules: parsed.rules ?? DEFAULT_RULES,
     settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
     tradeNotes: parsed.tradeNotes ?? {},
+    updatedAt: 0,
   };
   commit(next);
   return next;

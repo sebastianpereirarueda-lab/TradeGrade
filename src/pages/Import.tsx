@@ -6,10 +6,16 @@ import { sampleTrades } from "../lib/sample";
 import { Card } from "../components/ui";
 import { TradeTable } from "../components/TradeTable";
 import { ImportDropzone } from "../components/ImportDropzone";
+import { Link } from "react-router-dom";
+import { useAuth, signOut } from "../lib/auth";
+import { authConfigured } from "../lib/supabase";
+import { syncNow, useSyncStatus } from "../lib/sync";
 
 export function ImportPage() {
   const { trades, settings } = useAppState();
   const nav = useNavigate();
+  const { user } = useAuth();
+  const sync = useSyncStatus();
   const [result, setResult] = useState<ParseResult | null>(null);
   const [msg, setMsg] = useState("");
 
@@ -84,6 +90,35 @@ export function ImportPage() {
         </Card>
 
         <div className="space-y-4">
+          {authConfigured && (
+            <Card title="Account">
+              {user ? (
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <div>
+                    <div>{user.email}</div>
+                    <div className="text-xs text-ink-3">
+                      {sync.status === "error" ? `Sync error: ${sync.error}` : sync.status === "saving" ? "Saving…" : "Synced to your account"}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="btn" onClick={() => void syncNow().then(() => setMsg("Synced.")).catch((e) => setMsg(`Sync failed: ${(e as Error).message}`))}>
+                      Sync now
+                    </button>
+                    <button className="btn" onClick={() => void signOut()}>
+                      Sign out
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <span className="text-ink-2">Not signed in. Data stays in this browser only.</span>
+                  <Link to="/signin" className="btn btn-accent">
+                    Sign in
+                  </Link>
+                </div>
+              )}
+            </Card>
+          )}
           <Card title="Settings">
             <label className="flex items-center justify-between gap-3 text-sm">
               Starting balance
@@ -178,9 +213,11 @@ export function ImportPage() {
               </button>
             </div>
             <p className="mt-3 text-xs text-ink-3">
-              Everything is stored in this browser only. Download a backup before clearing site data or switching
-              machines. {trades.length} trades stored. Journal attachments (screenshots, videos, voice notes) live in
-              this browser's IndexedDB and are not part of the JSON backup; use the download button on each one.
+              {user
+                ? "Your data is synced to your account and also cached in this browser."
+                : "Everything is stored in this browser only. Download a backup before clearing site data or switching machines."}{" "}
+              {trades.length} trades stored. Attachments are not part of the JSON backup
+              {user ? " but are synced to your account." : "; use the download button on each one."}
             </p>
           </Card>
         </div>
