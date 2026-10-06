@@ -91,10 +91,9 @@ row-level security. One-time setup, about ten minutes:
    enable it, and paste a Google OAuth client ID and secret (created in the
    Google Cloud console with the redirect URI Supabase shows there).
 5. **Settings → API**: copy the **Project URL** and the **anon public** key.
-6. Put the **Project URL** and the key into `.github/workflows/deploy.yml`
-   (the two defaults in the build step), or add them as repository
-   **Variables** named `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`,
-   which take precedence.
+6. Put the **Project URL** (`https://<ref>.supabase.co`, not the app's
+   own address) and the key into `.github/workflows/deploy.yml`, in the
+   `env` of the build step.
 7. Push or re-run the **Deploy** workflow (Actions tab). The header now
    shows **Sign in**.
 

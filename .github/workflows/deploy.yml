@@ -33,10 +33,9 @@ jobs:
       - run: npm run build
         env:
           # Supabase project for sign-in and cloud sync (README "Accounts"). Both values are public by
-          # design; access is enforced by row-level security. Repository Variables of the same name
-          # override these defaults (Settings -> Secrets and variables -> Actions -> Variables).
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://zgtsfucgyfibczxnhqud.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || 'sb_publishable_ynaucukQlifIWOvsHqoqQQ_818f9d_j' }}
+          # design; access is enforced by row-level security. Edit them here to switch projects.
+          VITE_SUPABASE_URL: https://zgtsfucgyfibczxnhqud.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_ynaucukQlifIWOvsHqoqQQ_818f9d_j
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
