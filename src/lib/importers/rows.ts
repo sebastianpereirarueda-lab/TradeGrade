@@ -88,6 +88,8 @@ export interface ParseResult {
   columns: Partial<Record<keyof Trade, string>>;
   skipped: number;
   errors: string[];
+  /** Informational messages shown with the import preview. */
+  notes?: string[];
   source?: string;
 }
 
@@ -147,22 +149,6 @@ export function findHeaderRow(grid: unknown[][]): number {
     if (headerScore(grid[i]) >= 3) return i;
   }
   return -1;
-}
-
-export function parseGrid(grid: unknown[][], source: string): ParseResult {
-  const h = findHeaderRow(grid);
-  if (h === -1) {
-    return {
-      trades: [],
-      columns: {},
-      skipped: 0,
-      errors: [`${source}: could not find a header row with trade columns (entry time, exit time, P&L...).`],
-      source,
-    };
-  }
-  const headers = grid[h];
-  const body = grid.slice(h + 1).filter((r) => headerScore(r) < 3); // drop repeated headers (PDF pages)
-  return { ...mapRows(headers, body), source };
 }
 
 /** Merge incoming trades into existing ones, replacing duplicates by id. */

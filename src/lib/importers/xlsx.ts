@@ -1,5 +1,6 @@
 import { read, utils } from "xlsx";
-import { parseGrid, type ParseResult } from "./rows";
+import { type ParseResult } from "./rows";
+import { parseGrid } from "./grid";
 
 /** Parse every sheet of a workbook and keep the one with the most trades. */
 export function parseTradesXlsx(data: ArrayBuffer, source = "Excel"): ParseResult {

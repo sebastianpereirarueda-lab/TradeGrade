@@ -24,6 +24,12 @@ Entry Price, Exit Price, P&L, Commissions, Fees, Direction`.
   the columns, rows follow, repeated headers on later pages are skipped.
 - Re-importing a file merges by trade ID, so you can export weekly and never
   get duplicates.
+- **Orders exports** (one row per order, such as Topstep's orders export or
+  Tradovate's Orders report) are paired into round trips: filled orders are
+  matched first-in-first-out per contract, cancelled and rejected orders are
+  ignored, and P&L uses the contract's dollar value per point
+  (`src/lib/contracts.ts`). Orders exports carry no fees, so that P&L is
+  gross; the trades export gives exact net P&L.
 
 ## Pages
 

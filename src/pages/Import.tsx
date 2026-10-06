@@ -48,8 +48,8 @@ export function ImportPage() {
             }}
           />
           <p className="mt-3 text-xs text-ink-3">
-            Works with Topstep's "Export trades" CSV, the printed trade list, and similar exports from other prop
-            firms or Tradovate. Columns are matched by name; only entry time, exit time and P&amp;L are required.
+            Works with Topstep's trades and orders exports, the printed trade list, and similar exports from other
+            prop firms or Tradovate. Orders exports are paired into round trips automatically. Columns are matched by name; only entry time, exit time and P&amp;L are required.
             Re-importing the same file is safe: trades are matched by ID.
           </p>
           {result && (
@@ -61,6 +61,11 @@ export function ImportPage() {
               {result.errors.map((e) => (
                 <div key={e} className="mt-1 text-loss">
                   {e}
+                </div>
+              ))}
+              {result.notes?.map((n) => (
+                <div key={n} className="mt-1 text-xs text-ink-2">
+                  {n}
                 </div>
               ))}
               {result.trades.length > 0 && (

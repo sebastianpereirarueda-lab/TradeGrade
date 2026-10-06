@@ -10,7 +10,9 @@ Tailwind v4, Recharts, react-router (hash router). Local-first: state is in
 - `src/lib/stats.ts` – pure stats engine (summary, buckets, grades, percentiles). Tested.
 - `src/lib/importers/` – `rows.ts` shared header detection and row mapping; `csv.ts`,
   `xlsx.ts` (SheetJS), `pdf.ts` (pdf.js text positions -> grid); `index.ts` dispatches by
-  file type and lazy-loads the heavy parsers. Tested.
+  file type and lazy-loads the heavy parsers. `grid.ts` routes a header+rows grid to the
+  trade-list mapper or `orders.ts` (orders/fills export -> FIFO round trips, P&L via
+  `src/lib/contracts.ts` point values, gross of fees). Tested.
 - `src/lib/store.ts` – persisted store, `useAppState()`, `actions`.
 - `src/lib/media.ts` – journal attachments as Blobs in IndexedDB (`tradegrade-media`), hooks
   `useAttachments(date)` / `useAttachmentDates()`. Tested with fake-indexeddb.

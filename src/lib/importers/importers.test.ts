@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { utils, write } from "xlsx";
 import { parseTradesXlsx } from "./xlsx";
 import { headerColumns, itemsToGrid, tokenize, type TextItem } from "./pdf";
-import { parseGrid } from "./rows";
+import { parseGrid } from "./grid";
 import { parseTradesCsv } from "./csv";
 import { parseTimestamp } from "../dates";
 
