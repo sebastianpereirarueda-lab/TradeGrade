@@ -26,8 +26,11 @@ Tailwind v4, Recharts, react-router (hash router). Local-first: state is in
 - `src/pages/*` – Dashboard, Calendar, Day, Rules, Import.
 
 ## Conventions
-- Keep it simple and uncluttered; match the Topstep look (dark surfaces, green
-  profit `#34c474`, red loss `#df4f4a`, neutral gray). Colors are tokens in `src/index.css`.
+- Keep it simple and uncluttered; Topstep-style layout and data colours (green profit `#34c474`,
+  red loss `#df4f4a`, neutral gray) over a fluid-art backdrop with frosted-glass cards. Colours and
+  glass tokens live in `src/index.css`. The backdrop is generated, not stock: `src/assets/bg-fluid*.webp`
+  from `scripts/background/` (shader, seed 13). Keep cards readable: glass opacity ≥ 0.66, opaque
+  fallback for no-blur, reduced-transparency and high-contrast.
 - All metric math lives in `src/lib/stats.ts` as pure functions with tests; pages only
   compose them. P&L is net (minus commissions and fees) unless `settings.pnlIsNet`.
 - Deployment: GitHub Pages via `.github/workflows/deploy.yml` on push to `main`; `vite.config.ts`
@@ -43,7 +46,7 @@ Tailwind v4, Recharts, react-router (hash router). Local-first: state is in
 ## Design
 - Project skill `.claude/skills/frontend-design` (Anthropic, Apache-2.0) loads for UI work. Its own rule
   applies: the brief wins. The brief here is "mega simple, like the Topstep stats dashboard, not
-  cluttered": dashboard, calendar and day pages stay Topstep-like; spend any boldness on the landing
+  cluttered", with the fluid-art glass look added on request: dashboard, calendar and day pages stay Topstep-like; spend any boldness on the landing
   and sign-in screens only.
 
 ## Commands

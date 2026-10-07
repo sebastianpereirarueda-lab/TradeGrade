@@ -25,20 +25,69 @@ body,
   height: 100%;
 }
 
+/* Glass surfaces over the fluid-art backdrop. Charts and text keep their colours. */
+:root {
+  --glass: rgba(13, 16, 22, 0.66);
+  --glass-strong: rgba(13, 16, 22, 0.82);
+  --glass-control: rgba(24, 28, 36, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-blur: blur(18px) saturate(135%);
+}
+
 body {
   margin: 0;
-  background: radial-gradient(1200px 600px at 20% -10%, #152235 0%, var(--color-page) 55%);
-  background-attachment: fixed;
+  background: var(--color-page);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
+/* Fixed backdrop: the image, then a dark wash so data stays readable. Fixed layers instead of
+   background-attachment: fixed, which iOS Safari ignores. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+body::before {
+  z-index: -2;
+  background: url("./assets/bg-fluid.webp") center / cover no-repeat;
+}
+body::after {
+  z-index: -1;
+  background:
+    radial-gradient(120% 90% at 50% 40%, rgba(5, 7, 10, 0.28) 0%, rgba(5, 7, 10, 0.62) 100%),
+    rgba(5, 7, 10, 0.18);
+}
+@media (max-width: 900px) {
+  body::before {
+    background-image: url("./assets/bg-fluid-1280.webp");
+  }
+}
+
 .card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
   padding: 18px 22px;
+}
+
+/* Where blur is unavailable, or the viewer asks for less transparency or more contrast,
+   fall back to near-solid surfaces. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass: var(--glass-strong);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root {
+    --glass: #11141a;
+    --glass-control: #1c2028;
+  }
 }
 
 .card-title {
@@ -67,8 +116,8 @@ body {
 }
 
 .btn {
-  border: 1px solid var(--color-line);
-  background: var(--color-surface-2);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-control);
   color: var(--color-ink);
   border-radius: 6px;
   padding: 6px 12px;
@@ -79,9 +128,10 @@ body {
   cursor: pointer;
 }
 .btn:hover {
-  background: var(--color-line);
+  background: rgba(255, 255, 255, 0.1);
 }
-.btn-active {
+.btn-active,
+.btn-active:hover {
   background: var(--color-ink);
   color: var(--color-page);
   border-color: var(--color-ink);
@@ -99,8 +149,8 @@ body {
 }
 
 .input {
-  background: var(--color-page);
-  border: 1px solid var(--color-line);
+  background: rgba(6, 8, 12, 0.55);
+  border: 1px solid var(--glass-border);
   color: var(--color-ink);
   border-radius: 6px;
   padding: 8px 10px;
