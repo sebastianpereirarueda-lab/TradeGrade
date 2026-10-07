@@ -40,6 +40,12 @@ Tailwind v4, Recharts, react-router (hash router). Local-first: state is in
 - Charts: no animation, 2px lines, max 24px bars with rounded data-ends, hairline grid.
 - Text never wears the series color except the profit/loss sign tint via `PnlText`.
 
+## Design
+- Project skill `.claude/skills/frontend-design` (Anthropic, Apache-2.0) loads for UI work. Its own rule
+  applies: the brief wins. The brief here is "mega simple, like the Topstep stats dashboard, not
+  cluttered": dashboard, calendar and day pages stay Topstep-like; spend any boldness on the landing
+  and sign-in screens only.
+
 ## Commands
 ```
 npm run dev · npm run build · npm test · npm run typecheck
