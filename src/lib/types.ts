@@ -53,6 +53,8 @@ export interface AppState {
   settings: Settings;
   /** Free-form note per trade id. */
   tradeNotes: Record<string, string>;
+  /** User-defined GPA-style composite scores. */
+  scorecards: Scorecard[];
   /** Last local change, epoch ms. Used to reconcile with the cloud copy. */
   updatedAt?: number;
 }
@@ -60,4 +62,19 @@ export interface AppState {
 export interface DateRange {
   from: string | null; // YYYY-MM-DD inclusive
   to: string | null; // YYYY-MM-DD inclusive
+}
+
+/** One weighted metric inside a scorecard. `a` earns 4.0, `f` earns 0.0, linear in between. */
+export interface ScorecardComponent {
+  id: string;
+  metric: string; // MetricId from lib/scorecard
+  weight: number;
+  a: number;
+  f: number;
+}
+
+export interface Scorecard {
+  id: string;
+  name: string;
+  components: ScorecardComponent[];
 }

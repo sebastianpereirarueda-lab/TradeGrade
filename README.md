@@ -33,6 +33,13 @@ Entry Price, Exit Price, P&L, Commissions, Fees, Direction`.
 
 ## Pages
 
+- **Scorecards** (top of the dashboard) – a GPA from 0.0 to 4.0 combining
+  the metrics you pick. Each metric earns 4.0 at its A target and 0.0 at its
+  F target, linear in between, and the GPA is the weighted average. Add
+  metrics from the dropdown (performance, risk, and discipline such as rules
+  followed, checklist completed, journaled, or both), set weights and
+  targets, and keep several scorecards. Discipline metrics count only days
+  you traded. A weekly trend shows the GPA week by week.
 - **Dashboard** – date range presets, total P&L, trade win %, avg win / avg
   loss, day win %, profit factor, best day % of profit, account balance,
   cumulative and daily P&L, duration and win rate by duration, weekday stats,

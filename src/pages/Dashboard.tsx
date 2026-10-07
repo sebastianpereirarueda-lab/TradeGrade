@@ -7,6 +7,7 @@ import { fmtDateTime, fmtDuration, fmtMoney, fmtNum, fmtPct, fmtPrice } from "..
 import { DateRangeBar, presetRange } from "../components/DateRangeBar";
 import { Card, Empty, PnlText, StatTile } from "../components/ui";
 import { ImportDropzone } from "../components/ImportDropzone";
+import { Scorecards } from "../components/Scorecards";
 import { actions } from "../lib/store";
 import { mergeTrades } from "../lib/importers";
 import { Donut, HalfGauge, SplitBar } from "../components/gauges";
@@ -85,6 +86,7 @@ export function Dashboard() {
         </Card>
       ) : (
         <>
+          <Scorecards trades={filtered} range={range} />
           <div className="grid gap-4 md:grid-cols-3">
             <StatTile title="Total P&L" value={fmtMoney(s.totalPnl)} tone={s.totalPnl} />
             <StatTile

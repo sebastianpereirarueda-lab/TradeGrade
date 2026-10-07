@@ -161,7 +161,7 @@ describe("csv", () => {
 });
 
 describe("sync reconcile", () => {
-  const empty: AppState = { trades: [], journals: {}, rules: [], settings: GROSS, tradeNotes: {}, updatedAt: 0 };
+  const empty: AppState = { trades: [], journals: {}, rules: [], settings: GROSS, tradeNotes: {}, scorecards: [], updatedAt: 0 };
   const withTrades = (updatedAt: number): AppState => ({ ...empty, trades: [base({})], updatedAt });
 
   it("pushes when the account has nothing yet", () => {

@@ -87,7 +87,8 @@ function schedulePush(userId: string) {
 function applyRemote(data: AppState) {
   applyingRemote = true;
   try {
-    actions.replaceAll({ ...data, updatedAt: Date.now() });
+    // Older cloud copies predate scorecards; keep this device's rather than wiping them.
+    actions.replaceAll({ ...data, scorecards: data.scorecards ?? getState().scorecards, updatedAt: Date.now() });
   } finally {
     applyingRemote = false;
   }

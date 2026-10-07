@@ -13,6 +13,9 @@ Tailwind v4, Recharts, react-router (hash router). Local-first: state is in
   file type and lazy-loads the heavy parsers. `grid.ts` routes a header+rows grid to the
   trade-list mapper or `orders.ts` (orders/fills export -> FIFO round trips, P&L via
   `src/lib/contracts.ts` point values, gross of fees). Tested.
+- `src/lib/scorecard.ts` – GPA scorecards: metric catalog (`METRICS`), `gradePoints` (A target -> 4.0,
+  F target -> 0.0, linear, either direction), weighted `scoreScorecard`, `weeklyGpa`. Discipline metrics
+  are measured over traded days only. UI in `src/components/Scorecards.tsx`. Tested.
 - `src/lib/store.ts` – persisted store, `useAppState()`, `actions`.
 - `src/lib/media.ts` – journal attachments as Blobs in IndexedDB (`tradegrade-media`), hooks
   `useAttachments(date)` / `useAttachmentDates()`. Tested with fake-indexeddb.

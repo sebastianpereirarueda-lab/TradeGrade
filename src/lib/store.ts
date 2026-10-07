@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import type { AppState, DayJournal, Rule, Settings, Trade } from "./types";
+import type { AppState, DayJournal, Rule, Scorecard, Settings, Trade } from "./types";
+import { defaultScorecards } from "./scorecard";
 
 const KEY = "tradegrade:v1";
 
@@ -15,7 +16,15 @@ export const DEFAULT_RULES: Rule[] = [
 const DEFAULT_SETTINGS: Settings = { startingBalance: 50_000, pnlIsNet: false, sessionStartHour: 18 };
 
 function emptyState(): AppState {
-  return { trades: [], journals: {}, rules: DEFAULT_RULES, settings: DEFAULT_SETTINGS, tradeNotes: {}, updatedAt: 0 };
+  return {
+    trades: [],
+    journals: {},
+    rules: DEFAULT_RULES,
+    settings: DEFAULT_SETTINGS,
+    tradeNotes: {},
+    scorecards: defaultScorecards(),
+    updatedAt: 0,
+  };
 }
 
 function load(): AppState {
@@ -29,6 +38,7 @@ function load(): AppState {
       rules: parsed.rules ?? DEFAULT_RULES,
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
       tradeNotes: parsed.tradeNotes ?? {},
+      scorecards: parsed.scorecards ?? defaultScorecards(),
       updatedAt: parsed.updatedAt ?? 0,
     };
   } catch {
@@ -85,6 +95,9 @@ export const actions = {
     else delete tradeNotes[id];
     commit({ ...state, tradeNotes });
   },
+  setScorecards(scorecards: Scorecard[]) {
+    commit({ ...state, scorecards });
+  },
   setRules(rules: Rule[]) {
     commit({ ...state, rules });
   },
@@ -116,6 +129,7 @@ export function importBackup(text: string): AppState {
     rules: parsed.rules ?? DEFAULT_RULES,
     settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
     tradeNotes: parsed.tradeNotes ?? {},
+    scorecards: parsed.scorecards ?? defaultScorecards(),
     updatedAt: 0,
   };
   commit(next);
